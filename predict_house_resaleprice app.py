@@ -101,11 +101,21 @@ if st.button("Estimate price", type="primary"):
     
     # Group past prices into 10 bins. value_conts(bins=...) returns Interval
     # objects, which do not dispaly readably, so relabel them as "142k-167k"
-    bands = same_type["resale_price"].value_counts(bins=10).sort_index()
-    bands.index = [f"{int(i.left/1000)}k-{int(i.right/1000)}k" for i in bands.index]
+    bins = same_type["resale_price"].value_counts(bins=10).sort_index()
+    labels = [f"{int(i.left/1000)}k-{int(i.right/1000)}k" for i in bins.index]
+
+    # Split the counts into two columns so the band holding the estimate is drawn
+    # In a different colour. This makes the user's own price visible on the chart
+    # Instead of only being mentioned in the text below it
+    chart_data = pd.DataFrame({"Past sales": bins.values,
+                              "Your estimate": 0}, index=labels)
+    for pos, interval in enumerate(bins.index):
+        if interval.left < price <= interval.right:
+            chart_data.iloc[pos,1] = chart_data.iloc[pos,0] # move count across
+            chart_data.iloc[pos,0] = 0
 
     st.write(f"How this compares to other {flat_type} flats in Bukit Timah: ")
-    st.bar_chart(bands, horizontal=True)
+    st.bar_chart(chart_data, horizontal=True)
 
     # Note: "$" starts LaTeX maths in Streamlit markdown, so it is escaped as "\$"
     st.caption(f"Your estimate: S\\${price:,.0f} | "
