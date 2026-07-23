@@ -14,7 +14,7 @@ try:
     bundle = joblib.load("house_predict_best_model.pkl")
 except FileNotFoundError:
     st.error("Model file not found. Please make sure "
-             "'house_predict_best_model.pkl' is in the same folr as this app.")
+             "'house_predict_best_model.pkl' is in the same folder as this app.")
 
     st.stop()
 
@@ -52,7 +52,7 @@ year = st.slider("Year of sale", 2000, 2012, value=2012)
 
 
 #--- Input validation ---
-# Warn the user when the combination is rare in the training data, so they know the estimate is less trusworthy instead of trusting a wrong number
+# Warn the user when the combination is rare in the training data, so they know the estimate is less trustworthy instead of trusting a wrong number
 
 if flat_type == "3 ROOM" and floor_area > 100:
     st.warning("A 3 ROOM flat larger than 100 sqm is rare in the data "
@@ -64,7 +64,7 @@ elif flat_type == "EXECUTIVE" and floor_area < 120:
 #--- Predict ---
 if st.button("Estimate price", type="primary"):
 
-    # step1: trun the floor value into middle floor
+    # step1: turn the floor value into middle floor
     low, high = storey_range.split("TO")
     storey_mid = (int(low) + int(high)) / 2
 
@@ -93,3 +93,13 @@ if st.button("Estimate price", type="primary"):
     price = model.predict(new_flat)[0]
     st.metric("Estimated resale price", f"S${price:,.0f}")
     st.caption("The model is typically off by about $31,000, so use this as a guide price rather than a formal valuation")
+
+    # step6: show the sale prices into 10 bins, then label them in a readable way
+    # (e.g. "229k-267k") instead of showing raw interval objects
+    df = pd.read_csv("dataset.csv")
+    same_type = df[df["flat_type"] == flat_type]
+    
+    st.write(f"How this compares to other {flat_type} flats in Bukit Timah:")
+    st.bar_chart(same_type["resale_price"].value_counts(bins=10).sort_index())
+    st.caption(f"Your estimate: S${price:,.0f} | Median {flat_type}: "
+              f"S${same_type['resale_price'].median():,.0f}")
