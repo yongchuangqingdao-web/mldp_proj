@@ -105,7 +105,7 @@ if st.button("Estimate price", type="primary"):
     bands.index = [f"{int(i.left/1000)}k-{int(i.right/1000)}k" for i in bands.index]
 
     st.write(f"How this compares to other {flat_type} flats in Bukit Timah: ")
-    st.bar_chart(bands)
+    st.bar_chart(bands, horizontal=True)
 
     # Note: "$" starts LaTeX maths in Streamlit markdown, so it is escaped as "\$"
     st.caption(f"Your estimate: S\\${price:,.0f} | "
