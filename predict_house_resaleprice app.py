@@ -94,12 +94,19 @@ if st.button("Estimate price", type="primary"):
     st.metric("Estimated resale price", f"S${price:,.0f}")
     st.caption("The model is typically off by about $31,000, so use this as a guide price rather than a formal valuation")
 
-    # step6: show the sale prices into 10 bins, then label them in a readable way
-    # (e.g. "229k-267k") instead of showing raw interval objects
+    # step6: show how this estimate compares to real past sales
     df = pd.read_csv("dataset.csv")
     same_type = df[df["flat_type"] == flat_type]
+    median_price= same_type["resale_price"].median()
     
-    st.write(f"How this compares to other {flat_type} flats in Bukit Timah:")
-    st.bar_chart(same_type["resale_price"].value_counts(bins=10).sort_index())
-    st.caption(f"Your estimate: S${price:,.0f} | Median {flat_type}: "
-              f"S${same_type['resale_price'].median():,.0f}")
+    # Group past prices into 10 bins. value_conts(bins=...) returns Interval
+    # objects, which do not dispaly readably, so relabel them as "142k-167k"
+    bands = same_type["resale_price"].value_counts(bins=10).sort_index()
+    bands.index = [f"{int(i.left/1000)}k-{int(i.right/1000)}k" for i in bands.index]
+
+    st.write(f"How this compares to other {flat_type} flats in Bukit Timah: ")
+    st.bar_chart(bands)
+
+    # Note: "$" starts LaTeX maths in Streamlit markdown, so it is escaped as "\$"
+    st.caption(f"Your estimate: S\\${price:,.0f} | "
+               f"Median {flat_type}: S\\${median_price:,.0f}")
